@@ -15,6 +15,8 @@ public class App
         	System.out.println( "summarization started" );
         	PathFinder pathF = new PathFinder(args[0], args[1]);
         	pathF.initPathFinding();
+        	System.out.println( "---------pathfinding started---------" );
+        	pathF.findPaths();
         }
     }
 }
