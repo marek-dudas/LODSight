@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.sparql.path.PathWriter;
 
 public class PathFinder {
 	
@@ -114,12 +113,21 @@ public class PathFinder {
 						path.addNode(classes.get(objectI));
 						paths.add(path);
 					}
-				}		
+				}
 				System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
+			}		
+			try {
+				System.out.println("waiting for 10sec");
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
 		}
 	
 	}
+	
+	public List<Path> getPaths() { return paths;}
 	
 }
