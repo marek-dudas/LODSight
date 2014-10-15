@@ -10,4 +10,7 @@ public class Triplet {
 		this.t1 = t1; this.t2 = t2; this.p = p;
 	}
 	
+	public RDFNode s() { return t1;}
+	public RDFNode p() { return p;}
+	public RDFNode o() { return t2;}
 }

@@ -86,32 +86,39 @@ public class PathFinder {
 				+ "?s <"+p+"> ?o . }";
 	}
 	
-	public void findPaths() {
+	public void findPaths(PathDoneChecker pathChecker) {
 		paths = new ArrayList<Path>();
 		for(predicateI = 0; predicateI < predicates.size(); predicateI++) {
 			for(subjectI = 0; subjectI < classes.size(); subjectI++) {
 				for(objectI = 0; objectI < classes.size(); objectI++)
 				{
-					Query query = QueryFactory.create(getPathQuery(classes.get(subjectI).toString(), 
-							predicates.get(predicateI).toString(), 
-							classes.get(objectI).toString())) ;
-					QueryExecution qexec = null;
-					try {
-						qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
-					}
-					catch(Error e) {
-						  System.err.println("Error on creating query: "+query+" .... error: "+e.getMessage());
-					}
-					ResultSet results = qexec.execSelect();
-					int count = 0;
-					if(results.hasNext())
-						count = results.next().get("?total").asLiteral().getInt();
-					if(count>0) {
-						Path path = new Path(count);
-						path.addNode(classes.get(subjectI));
-						path.addNode(predicates.get(predicateI));
-						path.addNode(classes.get(objectI));
-						paths.add(path);
+					Path path = new Path(0);
+					path.addNode(classes.get(subjectI));
+					path.addNode(predicates.get(predicateI));
+					path.addNode(classes.get(objectI));
+					if (pathChecker.isPathChecked(path)) continue;
+					else {
+						
+					
+						Query query = QueryFactory.create(getPathQuery(classes.get(subjectI).toString(), 
+								predicates.get(predicateI).toString(), 
+								classes.get(objectI).toString())) ;
+						QueryExecution qexec = null;
+						try {
+							qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
+						}
+						catch(Error e) {
+							  System.err.println("Error on creating query: "+query+" .... error: "+e.getMessage());
+						}
+						ResultSet results = qexec.execSelect();
+						int count = 0;
+						if(results.hasNext())
+							count = results.next().get("?total").asLiteral().getInt();
+						if(count>0) {
+							path.setFreq(count);
+							pathChecker.storePath(path);
+							paths.add(path);
+						}
 					}
 				}
 				System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());

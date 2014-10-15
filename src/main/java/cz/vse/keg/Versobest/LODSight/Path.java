@@ -7,7 +7,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 
 public class Path {
 	private List<RDFNode> nodes;
-	private int frequency;
+	private int frequency=0;
 	
 	public Path(int freq) {
 		nodes = new ArrayList<RDFNode>();
@@ -19,15 +19,16 @@ public class Path {
 	}
 	
 	public List<Triplet> getTriplets() {
+		List<Triplet> triplets = new ArrayList<Triplet>();
 		if(nodes.size() >= 3 && (nodes.size() - 3) % 2 == 0) {
-			List<Triplet> triplets = new ArrayList<Triplet>();
 			for(int i=0; i+2<nodes.size(); i+=2) {
 				triplets.add(new Triplet(nodes.get(i),nodes.get(i+1),nodes.get(i+2)));
 			}
-			return triplets;
 		}
-		else return null;
+		return triplets;
 	}
+	
+	public List<RDFNode> getNodes() { return nodes; }
 	
 	public String toString() {
 		String s = nodes.get(0).asResource().getLocalName();
@@ -37,5 +38,11 @@ public class Path {
 		s += " : "+frequency;
 		return s;
 	}
+	
+	public void setFreq(int freq) {
+		frequency  =freq;
+	}
+	
+	public int getFreq() { return frequency; }
 	
 }
