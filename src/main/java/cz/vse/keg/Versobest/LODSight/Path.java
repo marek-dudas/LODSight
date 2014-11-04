@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
-public class Path {
+public class Path implements Comparable<Path>{
 	private List<RDFNode> nodes;
 	private int frequency=0;
 	
@@ -44,5 +44,13 @@ public class Path {
 	}
 	
 	public int getFreq() { return frequency; }
+
+	@Override
+	public int compareTo(Path o) {
+		// TODO Auto-generated method stub
+		if(o.frequency > frequency) return -1;
+		else if(o.frequency == frequency) return 0;
+		else return 1;
+	}
 	
 }

@@ -1,6 +1,7 @@
 package cz.vse.keg.Versobest.LODSight;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.hp.hpl.jena.query.*;
@@ -23,7 +24,7 @@ public class PathFinder {
 		  Query query = QueryFactory.create(findPredicatesQuery) ;
 		  QueryExecution qexec = null;
 		  try {
-			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
+			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query);
 		  }
 		  catch(Error e) {
 			  System.err.println("Error on creating query: "+query+" .... error: "+e.getMessage());
@@ -96,7 +97,12 @@ public class PathFinder {
 					path.addNode(classes.get(subjectI));
 					path.addNode(predicates.get(predicateI));
 					path.addNode(classes.get(objectI));
-					if (pathChecker.isPathChecked(path)) continue;
+					int storedFrequency = pathChecker.getPathFrequency(path);
+					if (storedFrequency>0) 
+					{
+						path.setFreq(storedFrequency);
+						paths.add(path);
+					}
 					else {
 						
 					
@@ -132,6 +138,8 @@ public class PathFinder {
 			}
 			System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
 		}
+		
+		Collections.sort(paths);
 	
 	}
 	

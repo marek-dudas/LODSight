@@ -10,13 +10,9 @@ public class App
     {
         System.out.println( "LODSight started" );
         
-        if(args.length<2) System.out.println("Usage: lodsight <SPARQL Endpoint> <Default graph>");
+        if(args.length<1) System.out.println("Usage: lodsight <SPARQL Endpoint> [summary ID](optional) ");
         else {
         	System.out.println( "summarization started" );
-        	PathFinder pathF = new PathFinder(args[0], args[1]);
-        	pathF.initPathFinding();
-        	System.out.println( "---------pathfinding started---------" );
-        	pathF.findPaths();
         }
     }
 }

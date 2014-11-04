@@ -12,7 +12,7 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.sparql.function.library.namespace;
 
-public class SQLStorage implements PathDoneChecker {
+public class SQLStorage implements PathDoneChecker, CSetStorage {
 	Connection conn;
 	int sumid = -1;
 	
@@ -166,12 +166,30 @@ public class SQLStorage implements PathDoneChecker {
 	}
 	
 	private void storePathTriplet(Triplet t, int pathid, int orderNum) {
-		String sqlString = "INSERT INTO Triplet(PathID, OrderNum, Subject_EntityID, Predicate_EntityID, Object_EntityID) VALUES (?,?,?,?,?)";
+		String sqlString = "INSERT INTO PathTriplet(PathID, OrderNum, Subject_EntityID, Predicate_EntityID, Object_EntityID) VALUES (?,?,?,?,?)";
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = conn.prepareStatement(sqlString);
 			preparedStatement.setInt(1, pathid);
 			preparedStatement.setInt(2, sumid);
+			preparedStatement.setInt(3, getEntityID(t.s()));
+			preparedStatement.setInt(4, getEntityID(t.p()));
+			preparedStatement.setInt(5, getEntityID(t.o()));
+			preparedStatement.executeUpdate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
+	private void storeSetTriplet(Triplet t, int setId, int freq) {
+		String sqlString = "INSERT INTO SetTriplet(SetID, Frequency, Subject_EntityID, Predicate_EntityID, Object_EntityID) VALUES (?,?,?,?,?)";
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = conn.prepareStatement(sqlString);
+			preparedStatement.setInt(1, setId);
+			preparedStatement.setInt(2, freq);
 			preparedStatement.setInt(3, getEntityID(t.s()));
 			preparedStatement.setInt(4, getEntityID(t.p()));
 			preparedStatement.setInt(5, getEntityID(t.o()));
@@ -195,12 +213,38 @@ public class SQLStorage implements PathDoneChecker {
 	}
 
 	@Override
-	public boolean isPathChecked(Path path) {
-		String sqlString = "SELECT * FROM Path WHERE PathHash = ?";
+	public int getPathFrequency(Path path) {
+		String sqlString = "SELECT * FROM Path WHERE PathHash = ? AND SumID = ?";
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = conn.prepareStatement(sqlString);
 			preparedStatement.setString(1, getPathHash(path));
+			preparedStatement.setInt(2, sumid);
+			preparedStatement.execute();
+			java.sql.ResultSet result = preparedStatement.getResultSet();
+			if(result != null && result.next()) {
+				return result.getInt("Frequency");
+			}
+			else {
+				return -1;
+			}		
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+		return -1;
+	}
+
+	@Override
+	public boolean cSetExists(RDFNode predicate) {
+		String sqlString = "SELECT * FROM SetTriplet INNER JOIN CSet ON SetTriplet.SetID = CSet.SetID WHERE Subject_EntityID = ? AND SumID = ?";
+		PreparedStatement preparedStatement = null;
+		int predicateEntityID = getEntityID(predicate);
+		try {
+			preparedStatement = conn.prepareStatement(sqlString);
+			preparedStatement.setInt(1, predicateEntityID);
+			preparedStatement.setInt(2, sumid);
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();
 			if(result != null && result.next()) {
@@ -214,6 +258,47 @@ public class SQLStorage implements PathDoneChecker {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
+		return false;
+	}
+	
+	private void storeSetPredicate(int setId, RDFNode predicate) {
+		String sqlString = "INSERT INTO SetPredicate(SetID, EntityID) VALUES (?,?)";
+		PreparedStatement preparedStatement = null;
+		int entityId = getEntityID(predicate);
+		try {
+			preparedStatement = conn.prepareStatement(sqlString);
+			preparedStatement.setInt(1, setId);
+			preparedStatement.setInt(2, entityId);
+			preparedStatement.executeUpdate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+
+	@Override
+	public boolean storeCSet(CSet cSet) {
+		Integer setId = generateID("CSet", "SetID");
+		for (RDFNode predicate : cSet.getPredicates()) {
+			storeSetPredicate(setId, predicate);
+		}
+		String sqlString = "INSERT INTO CSet(SetID, SumID, Frequency) VALUES (?,?,?)";
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = conn.prepareStatement(sqlString);
+			preparedStatement.setInt(1, setId);
+			preparedStatement.setInt(2, sumid);
+			preparedStatement.setInt(3, cSet.getFrequency());
+			preparedStatement.executeUpdate();
+			for (Triplet t : cSet.getTriplets()) {
+				storeSetTriplet(t, setId, t.getFrequency());
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 		return false;
 	}
 }

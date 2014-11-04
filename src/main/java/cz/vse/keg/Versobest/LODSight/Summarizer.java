@@ -9,4 +9,12 @@ public class Summarizer {
 	
 	String getEndpoint() { return endpoint;}
 	String getGraph() { return graph; }
+	
+	public void summarizeDataset(int continueWithID) {
+
+    	PathFinder pathF = new PathFinder(args[0]);
+    	pathF.initPathFinding();
+    	System.out.println( "---------pathfinding started---------" );
+    	//pathF.findPaths();
+	}
 }
