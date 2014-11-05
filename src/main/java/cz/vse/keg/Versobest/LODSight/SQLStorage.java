@@ -75,6 +75,10 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 		
 	}
 	
+	public void continueWithSummary(int sumId) {
+		this.sumid = sumId;
+	}
+	
 	private int getPrefixID(String prefix){
 		String sqlString = "SELECT PrefixID FROM Prefix WHERE URI = ?";
 		PreparedStatement preparedStatement = null;
@@ -237,13 +241,13 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	}
 
 	@Override
-	public boolean cSetExists(RDFNode predicate) {
+	public boolean cSetExists(RDFNode subject) {
 		String sqlString = "SELECT * FROM SetTriplet INNER JOIN CSet ON SetTriplet.SetID = CSet.SetID WHERE Subject_EntityID = ? AND SumID = ?";
 		PreparedStatement preparedStatement = null;
-		int predicateEntityID = getEntityID(predicate);
+		int subjectEntityID = getEntityID(subject);
 		try {
 			preparedStatement = conn.prepareStatement(sqlString);
-			preparedStatement.setInt(1, predicateEntityID);
+			preparedStatement.setInt(1, subjectEntityID);
 			preparedStatement.setInt(2, sumid);
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();

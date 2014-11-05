@@ -19,6 +19,8 @@ public class PathFinder {
 	private List<RDFNode> classes;
 	private List<Path> paths;
 	private int predicateI, subjectI, objectI;
+	
+	private int predicateLimit;
 
 	private boolean findPredicates() {		 
 		  Query query = QueryFactory.create(findPredicatesQuery) ;
@@ -67,11 +69,12 @@ public class PathFinder {
 		  return true;		      
 	}
 	
-	public PathFinder(String sparqlEndpoint, String defGraph) {
+	public PathFinder(String sparqlEndpoint, String defGraph, int predicateLimit) {
 		predicates = new ArrayList<RDFNode>();
 		classes = new ArrayList<RDFNode>();
 		this.endpoint = sparqlEndpoint;
 		this.defaultGraph = defGraph;
+		this.predicateLimit = (predicateLimit>0) ? predicateLimit : Integer.MAX_VALUE;
 	}
 	
 	public void initPathFinding() {
@@ -89,7 +92,7 @@ public class PathFinder {
 	
 	public void findPaths(PathDoneChecker pathChecker) {
 		paths = new ArrayList<Path>();
-		for(predicateI = 0; predicateI < predicates.size(); predicateI++) {
+		for(predicateI = 0; predicateI < predicates.size() && predicateI<predicateLimit; predicateI++) {
 			for(subjectI = 0; subjectI < classes.size(); subjectI++) {
 				for(objectI = 0; objectI < classes.size(); objectI++)
 				{
@@ -98,7 +101,7 @@ public class PathFinder {
 					path.addNode(predicates.get(predicateI));
 					path.addNode(classes.get(objectI));
 					int storedFrequency = pathChecker.getPathFrequency(path);
-					if (storedFrequency>0) 
+					if (storedFrequency>=0) 
 					{
 						path.setFreq(storedFrequency);
 						paths.add(path);
