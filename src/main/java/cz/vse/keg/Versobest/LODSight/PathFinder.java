@@ -8,7 +8,7 @@ import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
 public class PathFinder {
-	private static int hackerPause = 300000;
+	private int hackerPause = 300000;
 	private String endpoint;
 	private String defaultGraph;
 	
@@ -21,6 +21,10 @@ public class PathFinder {
 	private int predicateI, subjectI, objectI;
 	
 	private int predicateLimit;
+	
+	public void setHackerPause(int pause) {
+		hackerPause = pause;
+	}
 
 	private boolean findPredicates() {		 
 		  Query query = QueryFactory.create(findPredicatesQuery) ;

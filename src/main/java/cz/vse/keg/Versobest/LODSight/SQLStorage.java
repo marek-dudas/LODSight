@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
 import org.apache.jena.atlas.iterator.RepeatApplyIterator;
 
@@ -16,6 +17,8 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	Connection conn;
 	int sumid = -1;
 	boolean startedNewSummary = true;
+
+	HashMap<String, Integer> pathFrequencies = new HashMap<String, Integer>();
 	
 	public SQLStorage(String server, String db, String username, String password) {
 		try {
@@ -81,6 +84,22 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	public void continueWithSummary(int sumId) {
 		startedNewSummary = false;
 		this.sumid = sumId;
+		
+		String sqlString = "SELECT PathID, Frequency FROM Path WHERE SumID = ?";
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = conn.prepareStatement(sqlString);
+			preparedStatement.setInt(1, sumid);
+			preparedStatement.execute();
+			java.sql.ResultSet result = preparedStatement.getResultSet();
+			while(result.next()) {
+				pathFrequencies.put(result.getString("PathHash"), result.getInt("Frequency"));
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
 	
 	private int getPrefixID(String prefix){
@@ -234,29 +253,9 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	@Override
 	public int getPathFrequency(Path path) {
 		if(startedNewSummary) return -1;
-		String sqlString = "SELECT * FROM Path WHERE PathHash = ? AND SumID = ?";
-		PreparedStatement preparedStatement = null;
-		try {
-			preparedStatement = conn.prepareStatement(sqlString);
-			preparedStatement.setString(1, getPathHash(path));
-			preparedStatement.setInt(2, sumid);
-			preparedStatement.execute();
-			java.sql.ResultSet result = preparedStatement.getResultSet();
-			if(result != null && result.next()) {
-				int freq = result.getInt("Frequency");
-				preparedStatement.close();
-				return freq;
-			}
-			else {
-				preparedStatement.close();
-				return -1;
-			}		
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
-		return -1;
+		Integer freq = pathFrequencies.get(getPathHash(path));
+		if(freq==null) return -1;
+		else return freq;
 	}
 
 	@Override

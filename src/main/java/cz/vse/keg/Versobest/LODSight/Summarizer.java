@@ -18,12 +18,13 @@ public class Summarizer {
 	String getEndpoint() { return endpoint;}
 	String getGraph() { return graph; }
 	
-	public void summarizeDataset(int continueWithID) {
+	public void summarizeDataset(int continueWithID, String server, String db, String user, String pass, Integer pathHackerPause, Integer setHackerPause) {
 
-		SQLStorage storage = new SQLStorage("192.168.1.2", "lodsight", "lodsight", "loddva");
+		SQLStorage storage = new SQLStorage(server, db, user, pass); //"192.168.1.2", "lodsight", "lodsight", "loddva");
 		if(continueWithID>=0) storage.continueWithSummary(continueWithID);
 		else storage.addSummary(this);
     	PathFinder pathF = new PathFinder(endpoint, graph, predicateLimit);
+    	pathF.setHackerPause(pathHackerPause);
     	pathF.initPathFinding();
     	System.out.println( "---------pathfinding started---------" );
     	pathF.findPaths(storage);
@@ -36,6 +37,7 @@ public class Summarizer {
     		}
     	}
     	CSetFinder setFinder = new CSetFinder(endpoint, graph, storage);
+    	setFinder.setHackerPause(setHackerPause);
     	setFinder.findSets(frequentClassesList);
 	}
 }

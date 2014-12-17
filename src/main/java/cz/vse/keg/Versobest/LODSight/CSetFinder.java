@@ -16,7 +16,11 @@ public class CSetFinder {
 	private String endpoint;
 	private CSetStorage storage;
 	private String graph;
-	private static final int hackerPause = 1000;
+	private int hackerPause = 1000;
+	
+	public void setHackerPause(int pause) {
+		hackerPause = pause;
+	}
 	
 	public CSetFinder(String endpoint, String graph, CSetStorage storage)
 	{
