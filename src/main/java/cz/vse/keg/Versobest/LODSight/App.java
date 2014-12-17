@@ -10,7 +10,7 @@ public class App
     {
         System.out.println( "LODSight started" );
         
-        if(args.length<1) System.out.println("Usage: lodsight <SPARQL Endpoint> [predicate limit](use 0 for no-limit) [summary ID](optional) ");
+        if(args.length<1) System.out.println("Usage: lodsight <SPARQL Endpoint> [predicate limit](use 0 for no-limit) [graph](default:all) [summary ID](optional) ");
         else {
         	System.out.println( "summarization started" );
         	int predicateLimit = 0;
@@ -18,8 +18,9 @@ public class App
         	String endpoint = args[0];
         	String graph = "";
         	if(args.length>1) predicateLimit = Integer.parseInt(args[1]);
-        	if(args.length>2) summaryId = Integer.parseInt(args[2]);
-        	Summarizer summarizer = new Summarizer(args[0], graph, predicateLimit);
+        	if(args.length>2) graph = args[2];
+        	if(args.length>3) summaryId = Integer.parseInt(args[3]);
+        	Summarizer summarizer = new Summarizer(endpoint, graph, predicateLimit);
         	summarizer.summarizeDataset(summaryId);
         }
     }

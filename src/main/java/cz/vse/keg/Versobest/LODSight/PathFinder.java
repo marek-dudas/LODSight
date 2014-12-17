@@ -8,7 +8,7 @@ import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
 public class PathFinder {
-	
+	private static int hackerPause = 300000;
 	private String endpoint;
 	private String defaultGraph;
 	
@@ -26,7 +26,7 @@ public class PathFinder {
 		  Query query = QueryFactory.create(findPredicatesQuery) ;
 		  QueryExecution qexec = null;
 		  try {
-			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query);
+			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
 		  }
 		  catch(Error e) {
 			  System.err.println("Error on creating query: "+query+" .... error: "+e.getMessage());
@@ -104,42 +104,45 @@ public class PathFinder {
 					if (storedFrequency>=0) 
 					{
 						path.setFreq(storedFrequency);
-						paths.add(path);
+						if(storedFrequency>0) paths.add(path);
 					}
-					else {
-						
-					
+					else {					
 						Query query = QueryFactory.create(getPathQuery(classes.get(subjectI).toString(), 
 								predicates.get(predicateI).toString(), 
 								classes.get(objectI).toString())) ;
 						QueryExecution qexec = null;
-						try {
-							qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
-						}
-						catch(Error e) {
-							  System.err.println("Error on creating query: "+query+" .... error: "+e.getMessage());
-						}
-						ResultSet results = qexec.execSelect();
-						int count = 0;
-						if(results.hasNext())
-							count = results.next().get("?total").asLiteral().getInt();
+						ResultSet results = null;
+						int count = -1;
+						do {							
+							try {
+								qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
+								results = qexec.execSelect();
+								if(results!=null && results.hasNext())
+									count = results.next().get("?total").asLiteral().getInt();
+							}
+							catch(Throwable e) {
+								  System.err.println("Error on creating/running query: "+query+" .... error: "+e.getMessage());
+								  try {
+										System.out.println("waiting for " + hackerPause + "ms");
+										Thread.sleep(hackerPause);
+									} catch (InterruptedException interruptedException) {
+										// TODO Auto-generated catch block
+										interruptedException.printStackTrace();
+									}
+							}
+						} while (count<0);
+						
 						if(count>0) {
 							path.setFreq(count);
-							pathChecker.storePath(path);
 							paths.add(path);
 						}
+						pathChecker.storePath(path);
 					}
 				}
-				System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
+				System.out.println("Progress: "+(predicateI*classes.size()*classes.size()+subjectI*classes.size()+objectI)+" / "+((classes.size()*classes.size()*predicates.size())));
 			}		
-			try {
-				System.out.println("waiting for 10sec");
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
+			
+			//System.out.println("Progress: "+predicateI*classes.size()+subjectI*classes.size()+objectI / classes.size()*classes.size()*predicates.size());
 		}
 		
 		Collections.sort(paths);

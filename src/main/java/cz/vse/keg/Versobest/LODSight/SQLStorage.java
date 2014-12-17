@@ -15,6 +15,7 @@ import com.hp.hpl.jena.sparql.function.library.namespace;
 public class SQLStorage implements PathDoneChecker, CSetStorage {
 	Connection conn;
 	int sumid = -1;
+	boolean startedNewSummary = true;
 	
 	public SQLStorage(String server, String db, String username, String password) {
 		try {
@@ -45,10 +46,11 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 		Statement setIdStatement;
 		try {
 			do {
-				id = (int) Math.random()*100000000;
+				id = (int) (Math.random()*100000000);
 				setIdStatement = conn.createStatement();
 				setIdStatement.execute("SELECT "+column+" FROM "+table+" WHERE "+column+" = "+id);
-			} while(setIdStatement.getResultSet()!=null);
+			} while(setIdStatement.getResultSet().next());
+			setIdStatement.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -67,6 +69,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.setString(2, sum.getEndpoint());
 			preparedStatement.setInt(3, sumid);
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -76,6 +79,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	}
 	
 	public void continueWithSummary(int sumId) {
+		startedNewSummary = false;
 		this.sumid = sumId;
 	}
 	
@@ -88,7 +92,9 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();
 			if(result != null && result.next()) {
-				return result.getInt("PrefixID");				
+				int prefixId = result.getInt("PrefixID");				
+				preparedStatement.close();
+				return prefixId;
 			}
 			else {
 				int prefixID = generateID("Prefix", "PrefixID");
@@ -96,6 +102,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 				preparedStatement.setInt(1, prefixID);
 				preparedStatement.setString(2, prefix);
 				preparedStatement.executeUpdate();
+				preparedStatement.close();
 				return prefixID;
 			}		
 		} catch (SQLException e) {
@@ -117,9 +124,12 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();
 			if(result != null && result.next()) {
-				return result.getInt("EntityID");				
+				int entityId = result.getInt("EntityID");	
+				preparedStatement.close();
+				return entityId;
 			}
 			else {
+				preparedStatement.close();
 				return addEntity(node);
 			}		
 		} catch (SQLException e) {
@@ -139,6 +149,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.setString(2, n.asResource().getLocalName());
 			preparedStatement.setInt(3, getPrefixID(n.asResource().getNameSpace()));
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -162,9 +173,11 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			for (Triplet t : path.getTriplets()) {
 				storePathTriplet(t, pathid, tripletIndex);
 			}
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			System.out.println("error executing: " + preparedStatement.toString());
 			e.printStackTrace();
 		}		
 	}
@@ -180,6 +193,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.setInt(4, getEntityID(t.p()));
 			preparedStatement.setInt(5, getEntityID(t.o()));
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -198,6 +212,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.setInt(4, getEntityID(t.p()));
 			preparedStatement.setInt(5, getEntityID(t.o()));
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -218,6 +233,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 
 	@Override
 	public int getPathFrequency(Path path) {
+		if(startedNewSummary) return -1;
 		String sqlString = "SELECT * FROM Path WHERE PathHash = ? AND SumID = ?";
 		PreparedStatement preparedStatement = null;
 		try {
@@ -227,9 +243,12 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();
 			if(result != null && result.next()) {
-				return result.getInt("Frequency");
+				int freq = result.getInt("Frequency");
+				preparedStatement.close();
+				return freq;
 			}
 			else {
+				preparedStatement.close();
 				return -1;
 			}		
 			
@@ -242,6 +261,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 
 	@Override
 	public boolean cSetExists(RDFNode subject) {
+		if(startedNewSummary) return false;
 		String sqlString = "SELECT * FROM SetTriplet INNER JOIN CSet ON SetTriplet.SetID = CSet.SetID WHERE Subject_EntityID = ? AND SumID = ?";
 		PreparedStatement preparedStatement = null;
 		int subjectEntityID = getEntityID(subject);
@@ -252,9 +272,11 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.execute();
 			java.sql.ResultSet result = preparedStatement.getResultSet();
 			if(result != null && result.next()) {
+				preparedStatement.close();
 				return true;				
 			}
 			else {
+				preparedStatement.close();
 				return false;
 			}		
 			
@@ -274,6 +296,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			preparedStatement.setInt(1, setId);
 			preparedStatement.setInt(2, entityId);
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -284,9 +307,6 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 	@Override
 	public boolean storeCSet(CSet cSet) {
 		Integer setId = generateID("CSet", "SetID");
-		for (RDFNode predicate : cSet.getPredicates()) {
-			storeSetPredicate(setId, predicate);
-		}
 		String sqlString = "INSERT INTO CSet(SetID, SumID, Frequency) VALUES (?,?,?)";
 		PreparedStatement preparedStatement = null;
 		try {
@@ -298,11 +318,16 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 			for (Triplet t : cSet.getTriplets()) {
 				storeSetTriplet(t, setId, t.getFrequency());
 			}
+			preparedStatement.close();
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
-		return false;
+			return false;
+		}
+		for (RDFNode predicate : cSet.getPredicates()) {
+			storeSetPredicate(setId, predicate);
+		}
+		return true;
 	}
 }
