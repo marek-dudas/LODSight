@@ -26,8 +26,10 @@ public class PathFinder {
 		hackerPause = pause;
 	}
 
-	private boolean findPredicates() {		 
-		  Query query = QueryFactory.create(findPredicatesQuery) ;
+	private boolean findPredicates() {	
+		String predQueryString = findPredicatesQuery;
+		if(predicateLimit>0) predQueryString += " LIMIT "+predicateLimit;
+		  Query query = QueryFactory.create(predQueryString) ;
 		  QueryExecution qexec = null;
 		  try {
 			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);
@@ -52,7 +54,9 @@ public class PathFinder {
 	}
 	
 	private boolean findClasses() {		 
-		  Query query = QueryFactory.create(findClassesQuery) ;
+		String queryString = findClassesQuery;
+		if(predicateLimit>0) queryString += " LIMIT "+predicateLimit;
+		  Query query = QueryFactory.create(queryString) ;
 		  QueryExecution qexec = null;
 		  try {
 			  qexec  = QueryExecutionFactory.sparqlService(endpoint, query, defaultGraph);

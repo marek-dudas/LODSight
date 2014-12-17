@@ -32,7 +32,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 		
 		try {
 		    conn =
-		       DriverManager.getConnection("jdbc:mysql://"+server+":3306/"+db+"?" +
+		       DriverManager.getConnection("jdbc:mysql://"+server+"/"+db+"?" +
 		                                   "user="+username+"&"+"password="+password);
 
 		    // Do something with the Connection
