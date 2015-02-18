@@ -12,7 +12,14 @@ public class PathFinder {
 	private String endpoint;
 	private String defaultGraph;
 	
-	private static String findPredicatesQuery = "SELECT DISTINCT ?p WHERE {?s ?p ?o .}";
+	private static String findPredicatesQuery = ""
+			+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
+			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
+			+ "SELECT DISTINCT ?p" 
+			+ " WHERE {"
+			+ "?s ?p ?o ."
+			+ "FILTER (?p != rdfs:subClassOf && ?p != rdf:type)" //v0.2 added FILTER"
+			+ "}";
 	private static String findClassesQuery = "SELECT DISTINCT ?class WHERE {?s a ?class .}";
 	
 	private List<RDFNode> predicates;

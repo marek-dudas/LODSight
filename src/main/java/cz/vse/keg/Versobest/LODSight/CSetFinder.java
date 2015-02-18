@@ -47,10 +47,13 @@ public class CSetFinder {
 		    {
 		      QuerySolution soln = results.nextSolution() ;
 		      RDFNode predicate = soln.get("?p") ;       // Get a result variable by name.
-			  RDFNode objType = soln.get("?otype");
-			  triplets.add(new Triplet(s, predicate, objType));
-		      System.out.println("found predicate ... " + predicate.asResource().getNameSpace()+ " : "+ 
-		    		  predicate.asResource().getLocalName());
+			  RDFNode objType = soln.get("?otyped");
+			  if(objType != null)
+			  {
+				  triplets.add(new Triplet(s, predicate, objType));
+			      System.out.println("found predicate ... " + predicate.asResource().getNameSpace()+ " : "+ 
+			    		  predicate.asResource().getLocalName());
+			  }
 		      
 		    }
 		  return new CSet(triplets);		 
@@ -61,7 +64,7 @@ public class CSetFinder {
 			if(!storage.cSetExists(s))
 			{
 				CSet cSet = findForSubject(s);
-				if(cSet != null) this.storage.storeCSet(cSet);
+				if(cSet != null && cSet.getTriplets().size() > 0) this.storage.storeCSet(cSet);
 				System.out.println("waiting for " + hackerPause + "ms");
 				try {
 					Thread.sleep(hackerPause);
@@ -74,9 +77,14 @@ public class CSetFinder {
 	}
 	
 	private String getSetQuery(RDFNode subjectType){
-		return "SELECT DISTINCT ?p ?otype WHERE {"
-				+ "?s a <"+subjectType+"> . "
-				+ "?o a ?otype . "
-				+ "?s ?p ?o . }";
+		return "SELECT DISTINCT ?p ?otyped WHERE { \n"
+				+ "?s a <"+subjectType+"> . \n"
+				//+ "?o a ?otype . " //v0.2 including datatypes, more complex type finding
+				+ "?s ?p ?o . \n"
+				+ "OPTIONAL {?o a ?otype} . \n"
+				+ "BIND(if(isIRI(?o), ?otype, if(lang(?o)=\"\", datatype(?o), <http://www.w3.org/1999/02/22-rdf-syntax-ns#langString>)) AS ?otyped) \n"
+				+ "FILTER(bound(?otyped)) \n"
+				+ "FILTER(?p != <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> && ?p != <http://www.w3.org/2000/01/rdf-schema#subClassOf>) \n"
+				+ "}";
 	}
 }

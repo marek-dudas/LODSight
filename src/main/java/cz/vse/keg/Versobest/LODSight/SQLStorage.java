@@ -85,7 +85,7 @@ public class SQLStorage implements PathDoneChecker, CSetStorage {
 		startedNewSummary = false;
 		this.sumid = sumId;
 		
-		String sqlString = "SELECT PathID, Frequency FROM Path WHERE SumID = ?";
+		String sqlString = "SELECT Frequency, PathHash FROM Path WHERE SumID = ?";
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = conn.prepareStatement(sqlString);
