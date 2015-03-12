@@ -23,9 +23,12 @@ public class Summarizer {
 		SQLStorage storage = new SQLStorage(server, db, user, pass); //"192.168.1.2", "lodsight", "lodsight", "loddva");
 		if(continueWithID>=0) storage.continueWithSummary(continueWithID);
 		else storage.addSummary(this);
+		
+		/*
     	PathFinder pathF = new PathFinder(endpoint, graph, predicateLimit);
     	pathF.setHackerPause(pathHackerPause);
-    	pathF.initPathFinding();
+    	pathF.initPathFinding();*/
+		PathFinderSimple pathF = new PathFinderSimple(endpoint, graph);
     	System.out.println( "---------pathfinding started---------" );
     	pathF.findPaths(storage);
     	System.out.println( "---------pathfinding ended: "+ pathF.getPaths().size() + "paths found ---------" );

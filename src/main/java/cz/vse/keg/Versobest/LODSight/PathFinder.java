@@ -150,8 +150,9 @@ public class PathFinder {
 						if(count>0) {
 							path.setFreq(count);
 							paths.add(path);
+							pathChecker.storePath(path);
 						}
-						pathChecker.storePath(path);
+						//pathChecker.storePath(path); //storage limited to existing paths only due to performance issues
 					}
 				}
 				System.out.println("Progress: "+(predicateI*classes.size()*classes.size()+subjectI*classes.size()+objectI)+" / "+((classes.size()*classes.size()*predicates.size())));
