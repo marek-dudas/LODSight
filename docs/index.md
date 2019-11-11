@@ -11,7 +11,7 @@ There are two frontend web apps that can visualize the summarization.
 ## Authors
 
 * Marek Dudáš
-* Ondřej Zamazal
+* Jindřich Mynarz
 * [Vojtěch Svátek](https://nb.vse.cz/~svatek/topics.htm)
 
 ## Acknowledgments
