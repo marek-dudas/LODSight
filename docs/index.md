@@ -5,7 +5,7 @@ Based on query results, a summarisation is stored in an SQL database.
 
 There are two frontend web apps that can visualize the summarization.
 
-* [Old proof-of-concept GUI](https://github.com/marek-dudas/LodSight-visualizer)
+* [Old proof-of-concept GUI](https://github.com/marek-dudas/LodSight-visualizer) - you can see it running at http://rknown.vserver.cz/lodsight
 * New responsive GUI - not available on github, but will be deployed on a separate site soon.
 
 ## Authors
